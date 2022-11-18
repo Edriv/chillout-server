@@ -32,7 +32,7 @@ public class ProveedorController {
         return ResponseEntity.ok("Hello, world!");
     }
 
-    // http://localhost:7373/api/proveedor              // ROOT
+    // http://localhost:7373/api/proveedor
     @PostMapping("/")
     public ResponseEntity<?> saveProveedor(@RequestBody Proveedor proveedor){
         Proveedor newProveedor = service.createProveedor(proveedor);
@@ -52,7 +52,7 @@ public class ProveedorController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // http://localhost:7373/api/proveedor              // ROOT
+    // http://localhost:7373/api/proveedor
     // http://localhost:7373/api/proveedor/?page=0&size=10
     @GetMapping("/")
     public ResponseEntity<?> findProveedores(

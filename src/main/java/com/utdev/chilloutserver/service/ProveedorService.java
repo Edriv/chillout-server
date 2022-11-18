@@ -13,23 +13,23 @@ import java.util.List;
 @Service
 public class ProveedorService implements IProveedorService {
 
-    private final ProveedorRepository proveedorRepository;
+    private final ProveedorRepository repository;
 
     public ProveedorService(ProveedorRepository proveedorRepository) {
-        this.proveedorRepository = proveedorRepository;
+        this.repository = proveedorRepository;
     }
 
     //region Zona de CREATE
 
     // Save full Proveedor
     @Override
-    public Proveedor saveProveedor(Proveedor proveedor){ return proveedorRepository.save(proveedor); }
+    public Proveedor saveProveedor(Proveedor proveedor){ return repository.save(proveedor); }
 
     // Save partial Proveedor
     @Override
     public Proveedor createProveedor(Proveedor proveedor){
         proveedor.setFechaRegistro(LocalDateTime.now());
-        return proveedorRepository.save(proveedor);
+        return repository.save(proveedor);
     }
 
     //endregion
@@ -38,24 +38,24 @@ public class ProveedorService implements IProveedorService {
 
     // Get all Proveedores
     @Override
-    public List<Proveedor> findAllProveedores(){ return proveedorRepository.findAll(); }
+    public List<Proveedor> findAllProveedores(){ return repository.findAll(); }
 
     // Get Proveedores with paging
     @Override
     public Page<Proveedor> findProveedores(Pageable pageable){
-        return proveedorRepository.findAll(pageable);
+        return repository.findAll(pageable);
     }
 
     // Get Proveedor by ID
     @Override
     public Proveedor findById(String id){
-        return proveedorRepository.findById(id).orElse(null);
+        return repository.findById(id).orElse(null);
     }
 
     // Get Proveedores by fechaRegistro
     @Override
     public List<Proveedor> findByFechaRegistro(LocalDateTime fechaRegistro){
-        return proveedorRepository.findAllByFechaRegistro(fechaRegistro);
+        return repository.findAllByFechaRegistro(fechaRegistro);
     }
 
     // Get Proveedores by fechaRegistro between range
@@ -63,49 +63,49 @@ public class ProveedorService implements IProveedorService {
     public List<Proveedor> findByFechaRegistro(
             LocalDateTime fechaRegistroStart,
             LocalDateTime fechaRegistroEnd){
-        return proveedorRepository.findAllByFechaRegistroBetween(fechaRegistroStart, fechaRegistroEnd);
+        return repository.findAllByFechaRegistroBetween(fechaRegistroStart, fechaRegistroEnd);
     }
 
     // Get Proveedores by fechaRegistro before date
     @Override
     public List<Proveedor> findByFechaRegistroBefore(LocalDateTime fechaRegistro){
-        return proveedorRepository.findAllWithFechaRegistroBefore(fechaRegistro);
+        return repository.findAllWithFechaRegistroBefore(fechaRegistro);
     }
 
     // Get Proveedores by fechaRegistro after date
     @Override
     public List<Proveedor> findByFechaRegistroAfter(LocalDateTime fechaRegistro){
-        return proveedorRepository.findAllWithFechaRegistroAfter(fechaRegistro);
+        return repository.findAllWithFechaRegistroAfter(fechaRegistro);
     }
 
     // Get Proveedores by email
     @Override
     public List<Proveedor> findByEmail(String email){
-        return proveedorRepository.findByEmailLikeIgnoreCase("%"+email+"%");
+        return repository.findByEmailLikeIgnoreCase("%"+email+"%");
     }
 
     // Get Proveedores by nombreContacto
     @Override
     public List<Proveedor> findByNombreContacto(String nombreContacto){
-        return proveedorRepository.findByNombreContactoLikeIgnoreCase("%"+nombreContacto+"%");
+        return repository.findByNombreContactoLikeIgnoreCase("%"+nombreContacto+"%");
     }
 
     // Get Proveedores by razonSocial
     @Override
     public List<Proveedor> findByRazonSocial(String razonSocial){
-        return proveedorRepository.findByRazonSocialLikeIgnoreCase("%"+razonSocial+"%");
+        return repository.findByRazonSocialLikeIgnoreCase("%"+razonSocial+"%");
     }
 
     // Get Proveedores by RFC
     @Override
     public List<Proveedor> findByRfc(String rfc){
-        return proveedorRepository.findByRfcLikeIgnoreCase("%"+rfc+"%");
+        return repository.findByRfcLikeIgnoreCase("%"+rfc+"%");
     }
 
     // Get Proveedores by Activo Field
     @Override
     public List<Proveedor> findByActivo(boolean activo){
-        return (activo)?proveedorRepository.findByActivoTrue():proveedorRepository.findByActivoFalse();
+        return (activo)?repository.findByActivoTrue():repository.findByActivoFalse();
     }
 
     //endregion
@@ -115,13 +115,13 @@ public class ProveedorService implements IProveedorService {
     // Delete Proveedor by ID
     @Override
     public void deleteById(String id){
-        proveedorRepository.deleteById(id);
+        repository.deleteById(id);
     }
 
     // Change activo from Proveedor
     @Override
     public Proveedor inactiveById(String id){
-        Proveedor proveedor = proveedorRepository.findById(id).orElse(null);
+        Proveedor proveedor = repository.findById(id).orElse(null);
         if(proveedor != null)
             proveedor.setActivo(false);
         return proveedor;
