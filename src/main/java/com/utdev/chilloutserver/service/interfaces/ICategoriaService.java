@@ -14,6 +14,9 @@ public interface ICategoriaService {
     // Get categoria by Name
     Categoria findByNombre(String nombre);
 
+    // Get categoria by ID
+    Categoria findByID(int id);
+
     // Delete categoria by ID
     void deleteByID(int id);
 }

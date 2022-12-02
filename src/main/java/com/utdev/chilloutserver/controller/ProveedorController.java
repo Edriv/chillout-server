@@ -17,8 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@CrossOrigin(origins = "*")
 @RestController
-@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
+//@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
 @RequestMapping("api/proveedor")
 public class ProveedorController {
 
@@ -33,7 +34,7 @@ public class ProveedorController {
     }
 
     // http://localhost:7373/api/proveedor
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<?> saveProveedor(@RequestBody Proveedor proveedor){
         Proveedor newProveedor = service.createProveedor(proveedor);
         if (newProveedor != null)
@@ -54,7 +55,7 @@ public class ProveedorController {
 
     // http://localhost:7373/api/proveedor
     // http://localhost:7373/api/proveedor/?page=0&size=10
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<?> findProveedores(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size)

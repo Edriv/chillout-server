@@ -18,8 +18,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@CrossOrigin(origins = "*")
 @RestController
-@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
+//@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
 @RequestMapping("api/articulo")
 public class ArticuloController {
 
@@ -42,7 +43,7 @@ public class ArticuloController {
     }
 
     // http://localhost:7373/api/articulo
-    @PostMapping("/")
+    @PostMapping
     public ResponseEntity<?> saveArticulo(@RequestBody NewArticuloModel newArticulo){
         Articulo articulo = new Articulo();
         articulo.setCodBarras(newArticulo.getCodBarras());
@@ -57,20 +58,19 @@ public class ArticuloController {
         articulo.setDisponible(newArticulo.isDisponible());
         articulo.setVisible(newArticulo.isVisible());
         articulo.setProveedorID(newArticulo.getProveedorID());
-        articulo.setProveedorID(newArticulo.getPromoID());
+        articulo.setPromoID(newArticulo.getPromoID());
         articulo.setLastUpdateInventory(LocalDateTime.now());
 
-        if(newArticulo.getImagenes().isEmpty()){
-            articulo.setImg(false);
-        }else{
+        if(newArticulo.isImg()){
             articulo.setImg(true);
-            for (newImagen imagen:newArticulo.getImagenes()) {
-                String uuid = UUID.randomUUID().toString();
-                imagenService.saveImagen(new Imagen(new PKImagen(uuid, newArticulo.getCodBarras()),
-                        imagen.getName(),
-                        imagen.getType(),
-                        imagen.getImg()));
-            }
+            newImagen imagen = new newImagen(newArticulo.getName(), newArticulo.getType(), newArticulo.getImgBytes());
+            String uuid = UUID.randomUUID().toString();
+            imagenService.saveImagen(new Imagen(new PKImagen(uuid, newArticulo.getCodBarras()),
+                    imagen.getName(),
+                    imagen.getType(),
+                    imagen.getImg()));
+        }else{
+            articulo.setImg(false);
         }
 
         return new ResponseEntity<>(service.saveArticulo(articulo), HttpStatus.OK);
@@ -87,7 +87,7 @@ public class ArticuloController {
     }
 
     // http://localhost:7373/api/articulo?nombre={nombre}&img={img}
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> findArticulos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false, defaultValue = "true") boolean img,

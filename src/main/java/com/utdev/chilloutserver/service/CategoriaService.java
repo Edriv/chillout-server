@@ -34,6 +34,10 @@ public class CategoriaService implements ICategoriaService {
     @Override
     public  Categoria findByNombre(String nombre){ return  repository.findFirstByNombreIgnoreCase(nombre); }
 
+    // Get categoria by ID
+    @Override
+    public Categoria findByID(int id){ return repository.findById(id).orElse(null); }
+
     //endregion
 
     //region Zona de DELETE

@@ -1,90 +1,91 @@
 package com.utdev.chilloutserver.service.security;
 
-import com.google.gson.JsonObject;
-import org.apache.commons.codec.binary.Base64;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.JWSVerifier;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.utdev.chilloutserver.model.Usuario;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.nio.charset.Charset;
+import java.security.Key;
+import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.security.Signature;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.Calendar;
+import java.security.cert.Certificate;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
+import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 
 @Service
 public class JWTService {
 
-    private final static Charset UTF8_CHARSET = Charset.forName("UTF-8");
-    private static KeyStore myStore = null;
-    private static FileInputStream in_cert = null;
+    private KeyStore store = null;
+    private FileInputStream in_cert = null;
+    public  Key key = null;
+    public  Certificate cert = null;
+    public  KeyPair kp;
+    public JWTService() {}
 
-    public JWTService(){
-        PrivateKey privateKey = null;
+    public String getToken(Usuario user){
         try{
-            //in_cert = new FileInputStream(getClass().getResourceAsStream("/keystore.p12").toString());
             File p12 = new File(getClass().getClassLoader().getResource("keystore.p12").getFile());
             in_cert = new FileInputStream(p12);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        try{
-            myStore = KeyStore.getInstance("PKCS12");
-            myStore.load(in_cert, "M4st3r.K3y".toCharArray());
-            String alias = "";
-
-            Enumeration objEnumeration = myStore.aliases();
-            while(objEnumeration.hasMoreElements() == true){
-                alias = (String) objEnumeration.nextElement();
-                privateKey = (PrivateKey) myStore.getKey(alias, "M4st3r.K3y".toCharArray());
-                System.out.println(privateKey.getFormat());
-            }
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
-
-        JsonObject header = new JsonObject();
-        header.addProperty("alg","RS256");
-        header.addProperty("typ", "JWT");
-
-        Calendar cal = Calendar.getInstance();
-        cal.set(1970, 01, 01);
-        String iat = Long.toString((System.currentTimeMillis() - cal.getTimeInMillis())/1000);
-        //String iat = new SimpleDateFormat("yyyyMMddHHmmss").format(Calendar.getInstance().getTime());
-        String exp = Long.toString((System.currentTimeMillis() - cal.getTimeInMillis())/1000 + 60000L);
-
-        JsonObject claim = new JsonObject();
-        claim.addProperty("access_type", "offline");
-        claim.addProperty("exp", exp);
-        claim.addProperty("iat", iat);
-
-        System.out.println("Header : " + header);
-        String headerStr = header.toString();
-        System.out.println("claim : " + claim);
-        String claimStr = claim.toString();
-
         try {
-            byte[] headerArr = headerStr.getBytes(UTF8_CHARSET);
-            System.out.println(Base64.encodeBase64URLSafeString(headerArr));
+            store = KeyStore.getInstance("PKCS12");
+            store.load(in_cert, "M4st3r.K3y".toCharArray());
 
-            byte[] claimArr = claimStr.getBytes(UTF8_CHARSET);
-            System.out.println(Base64.encodeBase64URLSafeString(claimArr));
+            Enumeration aliasEnum = store.aliases();
+            while(aliasEnum.hasMoreElements()){
+                String keyName = (String)aliasEnum.nextElement();
+                key = store.getKey(keyName,"M4st3r.K3y".toCharArray());
+                cert = store.getCertificate(keyName);
+            }
 
-            String inputStr = Base64.encodeBase64URLSafeString(headerArr) + "." + Base64.encodeBase64URLSafeString(claimArr);
+            kp = new KeyPair(cert.getPublicKey(),(PrivateKey)key);
 
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
-            signature.update(inputStr.getBytes(UTF8_CHARSET));
+            ArrayList authorities = new ArrayList();
+            authorities.add(user.getRole());
 
-            System.out.println("Final JWT : " + Base64.encodeBase64URLSafeString(headerArr) + "." + Base64.encodeBase64URLSafeString(claimArr) + "." + Base64.encodeBase64URLSafeString(signature.sign()));
-        } catch (Exception e) {
-            e.printStackTrace();
+            JWSSigner signer = new RSASSASigner(kp.getPrivate());
+            JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                    .subject(user.getUsername())
+                    .claim("authorities", authorities)
+                    .expirationTime(new Date(new Date().getTime() + 60 * 1000))
+                    .build();
+            SignedJWT signedJWT = new SignedJWT(
+                    new JWSHeader.Builder(JWSAlgorithm.RS256).keyID("0001").build(),
+                    claimsSet);
+
+            signedJWT.sign(signer);
+            String s = signedJWT.serialize();
+
+            System.out.println(s);
+            return s;
+
+            // Esto se supone que es del lado del cliente (O ya cuando vaya a validar)
+            // signedJWT = SignedJWT.parse(s);
+            // JWSVerifier verifier = new RSASSAVerifier((RSAPublicKey) kp.getPublic());
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
+        return "";
     }
 
 }

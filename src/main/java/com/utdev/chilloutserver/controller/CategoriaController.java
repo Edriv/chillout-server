@@ -7,9 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+
+@CrossOrigin(origins = "*")
+//@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
 @RestController
-@CrossOrigin(origins = "*" , methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
 @RequestMapping("api/categoria")
 public class CategoriaController {
 
@@ -24,7 +28,8 @@ public class CategoriaController {
     }
 
     // http://localhost:7373/api/categoria
-    @GetMapping("/")
+    //@GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> findCategorias(){
         return new ResponseEntity<>(service.findAllCategorias(), HttpStatus.OK);
     }
@@ -35,9 +40,17 @@ public class CategoriaController {
         return new ResponseEntity<>(service.findByNombre(nombre), HttpStatus.OK);
     }
 
+    // http://localhost:7373/api/categoria/id/{id}
+    @GetMapping("/id/{id}")
+    public ResponseEntity<?> findByID(@PathVariable int id){
+        return new ResponseEntity<>(service.findByID(id), HttpStatus.OK);
+    }
+
     // http://localhost:7373/api/categoria/
-    @PostMapping("/")
-    public ResponseEntity<?> saveCategoria(@RequestBody Categoria categoria){
+    //@PostMapping("/")
+    @PostMapping
+    public ResponseEntity<?> saveCategoria(@RequestParam("categoria") MultipartFile file) throws IOException {
+        Categoria categoria = new Categoria(file.getOriginalFilename(), file.getBytes());
         Categoria newCategoria = service.saveCategoria(categoria);
         if (newCategoria != null)
             return new ResponseEntity<>(newCategoria, HttpStatus.CREATED);

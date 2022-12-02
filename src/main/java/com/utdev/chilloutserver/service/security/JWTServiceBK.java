@@ -1,28 +1,25 @@
 package com.utdev.chilloutserver.service.security;
 
 import com.google.gson.JsonObject;
+import org.apache.commons.codec.binary.Base64;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.util.Base64;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.util.Calendar;
-
-public class JWTServiceBackup {
+import java.util.Enumeration;
+public class JWTServiceBK {
 
     private final static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static KeyStore myStore = null;
     private static FileInputStream in_cert = null;
 
-    private static Key key = null;
-    private static Certificate certificate = null;
-    private static PublicKey publicKey = null;
-
-
-    public JWTServiceBackup(){
+    public JWTServiceBK(){
         PrivateKey privateKey = null;
         try{
             //in_cert = new FileInputStream(getClass().getResourceAsStream("/keystore.p12").toString());
@@ -37,14 +34,13 @@ public class JWTServiceBackup {
             myStore.load(in_cert, "M4st3r.K3y".toCharArray());
             String alias = "";
 
-            key = myStore.getKey("server", "M4st3r.K3y".toCharArray());
-            privateKey = (PrivateKey) key;
-            certificate = myStore.getCertificate("server");
-            publicKey = certificate.getPublicKey();
-
-            System.out.println(Base64.getEncoder().encodeToString(
-                    publicKey.getEncoded()));
-            in_cert.close();
+            Enumeration objEnumeration = myStore.aliases();
+            while(objEnumeration.hasMoreElements() == true){
+                alias = (String) objEnumeration.nextElement();
+                privateKey = (PrivateKey) myStore.getKey(alias, "M4st3r.K3y".toCharArray());
+                System.out.println(privateKey.getFormat());
+                System.out.println("ESTE ES EL ALIAS: "+alias);
+            }
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -56,6 +52,7 @@ public class JWTServiceBackup {
         Calendar cal = Calendar.getInstance();
         cal.set(1970, 01, 01);
         String iat = Long.toString((System.currentTimeMillis() - cal.getTimeInMillis())/1000);
+        //String iat = new SimpleDateFormat("yyyyMMddHHmmss").format(Calendar.getInstance().getTime());
         String exp = Long.toString((System.currentTimeMillis() - cal.getTimeInMillis())/1000 + 60000L);
 
         JsonObject claim = new JsonObject();
@@ -69,21 +66,19 @@ public class JWTServiceBackup {
         String claimStr = claim.toString();
 
         try {
-            Base64.Encoder encoder = Base64.getEncoder();
-
             byte[] headerArr = headerStr.getBytes(UTF8_CHARSET);
-            System.out.println(encoder.encodeToString(headerArr));
+            System.out.println(Base64.encodeBase64URLSafeString(headerArr));
 
             byte[] claimArr = claimStr.getBytes(UTF8_CHARSET);
-            System.out.println(encoder.encodeToString(claimArr));
+            System.out.println(Base64.encodeBase64URLSafeString(claimArr));
 
-            String inputStr = encoder.encodeToString(headerArr) + "." + encoder.encodeToString(claimArr);
+            String inputStr = Base64.encodeBase64URLSafeString(headerArr) + "." + Base64.encodeBase64URLSafeString(claimArr);
 
-            Signature signature = Signature.getInstance("NONEwithRSA");
+            Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(privateKey);
             signature.update(inputStr.getBytes(UTF8_CHARSET));
 
-            System.out.println("Final JWT : " + encoder.encodeToString(headerArr) + "." + encoder.encodeToString(claimArr) + "." + encoder.encodeToString(signature.sign()));
+            System.out.println("Final JWT : " + Base64.encodeBase64URLSafeString(headerArr) + "." + Base64.encodeBase64URLSafeString(claimArr) + "." + Base64.encodeBase64URLSafeString(signature.sign()));
         } catch (Exception e) {
             e.printStackTrace();
         }
